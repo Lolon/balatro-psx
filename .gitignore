@@ -12,3 +12,4 @@
 *.a
 third_party/psyq
 *.DS_Store
+/env
