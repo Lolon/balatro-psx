@@ -14,20 +14,20 @@
 // D E F I N E S 
 //-------------------------------------------------------------------------- 
 
-// screen resolution
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 512
+#define VMODE 0         // Video Mode : 0 : NTSC, 1: PAL
+#define SCREENXRES 320
+#define SCREENYRES 240
+#define CENTERX SCREENXRES/2
+#define CENTERY SCREENYRES/2
+#define MARGINX 32      // margins for text display
+#define MARGINY 44
+#define FONTSIZE 8 * 3          // Text Field Height
+#define OTLEN 8              // Ordering Table Length 
 
 //--------------------------------------------------------------------------
 // G L O B A L S
 //--------------------------------------------------------------------------
 
-extern int output_buffer_index;            // buffer index
-extern GsOT world_ordering_table[2];       // ordering table headers
-extern GsOT_TAG ordering_table[2][1<<1];   // actual ordering tables
-extern PACKET gpu_work_area[2][24000];     // GPU packet work area
-extern u_char prev_mode;				   // previous code
-extern int fnt_id[9]; 
 
 //--------------------------------------------------------------------------
 // P R O T O T Y P E S

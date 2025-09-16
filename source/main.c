@@ -18,8 +18,11 @@
 #include "soundbank.h"
 #include "soundbank_bin.h"
  */
-#include <libps.h>
+#include <sys/types.h>
 #include <stdio.h>
+#include <libgte.h>
+#include <libetc.h>
+#include <libgpu.h>
 
 #include <main.h>
 #include <music.h>
@@ -29,12 +32,12 @@
 // G L O B A L S
 //--------------------------------------------------------------------------
 
-int output_buffer_index;            // buffer index
-GsOT world_ordering_table[2];       // ordering table headers
-GsOT_TAG ordering_table[2][1<<1];   // actual ordering tables
-PACKET gpu_work_area[2][24000];     // GPU packet work area
-u_char prev_mode;					// previous code
-int fnt_id[9];						// font id
+DISPENV disp[2];             // Double buffered DISPENV and DRAWENV
+DRAWENV draw[2];
+u_long ot[2][OTLEN];     // double ordering table of length 8 * 32 = 256 bits / 32 bytes
+char primbuff[2][32768];     // double primitive buffer of length 32768 * 8 =  262.144 bits / 32,768 Kbytes
+char *nextpri = primbuff[0]; // pointer to the next primitive in primbuff. Initially, points to the first bit of primbuff[0]
+short db = 0;                // index of which buffer is used, values 0, 1
 
 
 int main(void)
@@ -50,7 +53,12 @@ int main(void)
     {
         printf("loop start: \n");
 
-        FntPrint(fnt_id[0], (char*)"WELCOME TO BALATRO!");
+        ClearOTagR(ot[db], OTLEN);
+
+
+        FntPrint("WELCOME TO BALATRO!");
+        FntFlush(-1);
+
         UpdateScreen();
 
         /*         
@@ -129,72 +137,35 @@ void Init( void )
      
      printf("Starting InitGame() \n");
     
-  
-     // all reset, the drawing environment and display are initialised
-     ResetGraph(0);
-
-    //This function MUST be called before using other libGS functions!
-     GsInitGraph( SCREEN_WIDTH, SCREEN_HEIGHT,
-                  GsOFSGPU|GsINTER, 0, 0 );
-
-
-     // load in the font pattern
-     FntLoad(960,256);
-     printf("Fonts loaded: \n");
-
-     fnt_id[0] = FntOpen(0,10,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[1] = FntOpen(0,20,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[2] = FntOpen(0,30,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[3] = FntOpen(0,40,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-
-     fnt_id[4] = FntOpen(0,120,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[5] = FntOpen(0,130,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[6] = FntOpen(0,140,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-     fnt_id[7] = FntOpen(0,150,SCREEN_WIDTH, SCREEN_HEIGHT,0,80);
-      
-        // save current video mode
-     prev_mode = GetVideoMode();
-
-     // init graphic mode
-     SetVideoMode( MODE_PAL );
-     printf("Set video mode complete: \n");
-
-             // double buffer definition
-     GsDefDispBuff( 0, 0, 0, 0 );
-     printf("Double buffer setup complete: \n");
-
-     
-     // set display output on t.v 
-     GsDISPENV.screen.x = 10;
-     GsDISPENV.screen.y = 18;
-     GsDISPENV.screen.w = 255;
-     GsDISPENV.screen.h = 255; 
-     
-     // set bg clear color and flag
-     GsDRAWENV.r0 = 0x00;
-     GsDRAWENV.g0 = 0x00;
-     GsDRAWENV.b0 = 0x80;
-     GsDRAWENV.isbg = 1;	  	
-      
-     // set up the ordering table handlers
-     for( count=0; count < 2; count++ )
-        {
-          world_ordering_table[count].length = 1;
-          world_ordering_table[count].org = ordering_table[count];
+    ResetGraph(0);
+    SetDefDispEnv(&disp[0], 0, 0, SCREENXRES, SCREENYRES);
+    SetDefDispEnv(&disp[1], 0, SCREENYRES, SCREENXRES, SCREENYRES);
+    SetDefDrawEnv(&draw[0], 0, SCREENYRES, SCREENXRES, SCREENYRES);
+    SetDefDrawEnv(&draw[1], 0, 0, SCREENXRES, SCREENYRES);
+    if (VMODE)
+    {
+        SetVideoMode(MODE_PAL);
+        disp[0].screen.y += 8;
+        disp[1].screen.y += 8;
         }
-
-     // initialises the ordering table
-     GsClearOt( 0, 0, &world_ordering_table[output_buffer_index]);
-     GsClearOt( 0, 0, &world_ordering_table[output_buffer_index+1]);
-     printf("WOT is setup and complete: \n");
-     printf("Game setup is complete: \n");
+    SetDispMask(1);                 // Display on screen    
+    setRGB0(&draw[0], 50, 50, 50);
+    setRGB0(&draw[1], 50, 50, 50);
+    draw[0].isbg = 1;
+    draw[1].isbg = 1;
+    PutDispEnv(&disp[db]);
+    PutDrawEnv(&draw[db]);
+    FntLoad(960, 0);
+    FntOpen(MARGINX, SCREENYRES - MARGINY - FONTSIZE, SCREENXRES - MARGINX * 2, FONTSIZE, 0, 280 );
+    
+    printf("Game setup is complete: \n");
 }
 
 void DeInitGame( void )
  {
 
       // set previous video mode
-     SetVideoMode( prev_mode );
+     //SetVideoMode( prev_mode );
 
      // current drawing is canvelled and the command queue is flushed
      ResetGraph(3);	   
@@ -220,31 +191,13 @@ void UpdateScreen( void )
 
     int count;
 
-    // get the active buffer
-    output_buffer_index = GsGetActiveBuff();
-
-    // sets drawing command storage address
-    GsSetWorkBase((PACKET*)gpu_work_area[output_buffer_index]);
-
-    // initialises the ordering table
-    GsClearOt(0, 0, &world_ordering_table[output_buffer_index]);
-
-    // rendering done here
-    
-    for( count =0; count <8; count++ )
-         FntFlush(fnt_id[count]);         
-         
-    //GsSortSprite(&sprite, &world_ordering_table[output_buffer_index], 0);           
-        
-    // wait for vertical synchronisation
-    VSync(0);    // 0: blocking until vertical synch occurs
-
-    // swap double buffers, (changes the display buffer and drawing buffer)
-    GsSwapDispBuff(); 
-       
-    // start execution of the drawing command registered in OT
-    GsDrawOt(&world_ordering_table[output_buffer_index]);
-
+    DrawSync(0);
+    VSync(0);
+    PutDispEnv(&disp[db]);
+    PutDrawEnv(&draw[db]);
+    DrawOTag(&ot[db][OTLEN - 1]);
+    db = !db;
+    nextpri = primbuff[db];
  }// end UpdateScreen 
 
 
