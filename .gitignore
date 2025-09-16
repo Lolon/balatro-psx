@@ -3,4 +3,12 @@
 /.vs
 *.sln
 *.vcxproj*
-/balatro-gba/x64/**
+*.elf
+*.map
+*.cpe
+*.ps-exe
+*.dep
+*.o
+*.a
+third_party/psyq
+*.DS_Store
