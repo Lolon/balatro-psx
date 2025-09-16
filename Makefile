@@ -7,6 +7,7 @@ third_party/nugget/common/crt0/memory-c.c \
 third_party/nugget/common/crt0/memory-s.s \
 source/main.c \
 source/music.c \
+source/util.c \
 
 #-fpermissive
 

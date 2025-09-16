@@ -167,7 +167,7 @@ void DeInitGame( void )
       // set previous video mode
      //SetVideoMode( prev_mode );
 
-     // current drawing is canvelled and the command queue is flushed
+     // current drawing is cancelled and the command queue is flushed
      ResetGraph(3);	   
 
      printf("Graphics flushed: \n");
@@ -188,9 +188,7 @@ void draw()
 
 void UpdateScreen( void )
  {
-
     int count;
-
     DrawSync(0);
     VSync(0);
     PutDispEnv(&disp[db]);
