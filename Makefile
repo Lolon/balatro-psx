@@ -6,6 +6,8 @@ third_party/nugget/common/crt0/crt0.s \
 third_party/nugget/common/crt0/memory-c.c \
 third_party/nugget/common/crt0/memory-s.s \
 source/main.c \
+source/music.c \
+
 #-fpermissive
 
 CPPFLAGS += -Wfatal-errors -Werror -msoft-float -Ithird_party/psyq-iwyu/include -Ithird_party/net-yaroze/include -Iinclude

@@ -20,7 +20,10 @@
  */
 #include <libps.h>
 #include <stdio.h>
+
 #include <main.h>
+#include <music.h>
+
 
 //--------------------------------------------------------------------------
 // G L O B A L S
@@ -40,6 +43,7 @@ int main(void)
 
     //init();
     Init();
+    MusicInit();
 
     //main loop
 	while(1)
