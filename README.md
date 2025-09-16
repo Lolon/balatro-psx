@@ -1,4 +1,11 @@
-# Balatro-GBA
+# Balatro-PSX
+
+An attempt to port the in-progress project porting balatro to the GBA onto the PSX. It will probably not be finished.
+
+
+--------------------------------------
+
+
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/cellos51/balatro-gba/build_ci_workflow.yml?style=flat&logo=github&branch=main&label=Builds&labelColor=gray&color=default&v=1)](https://github.com/cellos51/balatro-gba/actions)
 [![Open Issues](https://custom-icon-badges.demolab.com/github/issues/cellos51/balatro-gba?logo=bug&style=flat&label=Issues&labelColor=gray&color=red&v=2)](https://github.com/cellos51/balatro-gba/issues)
