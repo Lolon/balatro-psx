@@ -1,4 +1,4 @@
-#include "util.h"
+#include <util.h>
 #include <limits.h>
 
 int int_arr_max(int int_arr[], int size)
